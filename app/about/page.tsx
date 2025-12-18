@@ -1,8 +1,16 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FiCheck, FiUsers, FiAward, FiPackage } from "react-icons/fi";
-import Image from "next/image";
+import {
+  FiCheck,
+  FiUsers,
+  FiAward,
+  FiPackage,
+  FiTarget,
+  FiZap,
+  FiArrowRight,
+} from "react-icons/fi";
+import { motion } from "framer-motion";
 
 export default function AboutPage() {
   const { language } = useLanguage();
@@ -10,58 +18,57 @@ export default function AboutPage() {
   const content = {
     en: {
       title: "About CNC Design Studio",
-      subtitle: "Precision meets craftsmanship in furniture design",
+      subtitle: "Precision engineering meets bespoke craftsmanship",
       mission: {
-        title: "Our Mission",
+        title: "The Mission",
         description:
-          "To revolutionize furniture design through CNC precision, creating bespoke pieces that combine functionality with artistic expression.",
+          "To revolutionize interior architecture through CNC precision, creating pieces that balance industrial accuracy with artistic soul.",
       },
       vision: {
-        title: "Our Vision",
+        title: "The Vision",
         description:
-          "To be the leading CNC furniture design studio globally, recognized for innovation, quality, and sustainable practices.",
+          "To be the global benchmark for high-performance furniture design, defined by sustainable innovation and mathematical beauty.",
       },
       values: [
         {
           title: "Precision",
           description:
-            "Every cut, every joint, every detail executed with CNC accuracy",
+            "Every cut and joint executed with 0.01mm industrial accuracy.",
         },
         {
           title: "Innovation",
-          description: "Pushing boundaries with new designs and techniques",
+          description:
+            "Iterative design using advanced CAD/CAM software suites.",
         },
         {
           title: "Quality",
-          description: "Using premium materials and proven craftsmanship",
+          description:
+            "Grade-A sustainable materials sourced from verified suppliers.",
         },
         {
-          title: "Sustainability",
-          description: "Eco-friendly practices and responsible sourcing",
+          title: "Integrity",
+          description: "Transparent production cycles from draft to delivery.",
         },
       ],
       stats: [
-        { label: "Projects Completed", value: "200+" },
-        { label: "Happy Clients", value: "150+" },
-        { label: "Years Experience", value: "8+" },
-        { label: "Materials Used", value: "25+" },
+        { label: "Completed Units", value: "200+" },
+        { label: "Design Partners", value: "150+" },
+        { label: "Manufacturing Years", value: "8+" },
+        { label: "Material Profiles", value: "25+" },
       ],
       process: [
+        { title: "Consultation", description: "Architectural needs analysis." },
         {
-          title: "Consultation",
-          description: "Understanding your needs and vision",
+          title: "CAD Modeling",
+          description: "Digital prototyping & 3D stress testing.",
         },
         {
-          title: "Design",
-          description: "Creating detailed 3D models and plans",
+          title: "CNC Production",
+          description: "Automated precision milling & finishing.",
         },
         {
-          title: "Production",
-          description: "CNC precision cutting and assembly",
-        },
-        {
-          title: "Delivery",
-          description: "Professional installation and setup",
+          title: "Final Assembly",
+          description: "Hand-finished quality inspection.",
         },
       ],
     },
@@ -81,21 +88,14 @@ export default function AboutPage() {
       values: [
         {
           title: "ትክክለኛነት",
-          description:
-            "እያንዳንዱ መቁረጥ፣ እያንዳንዱ መገጣጠም፣ እያንዳንዱ ዝርዝር በCNC ትክክለኛነት ይከናወናል",
+          description: "እያንዳንዱ መቁረጥ፣ እያንዳንዱ መገጣጠም በCNC ትክክለኛነት ይከናወናል",
         },
-        {
-          title: "ማሕበረሰብ",
-          description: "በአዲስ ዲዛይኖች እና ቴክኒኮች ወሰኖችን መጉላላት",
-        },
+        { title: "ማሕበረሰብ", description: "በአዲስ ዲዛይኖች እና ቴክኒኮች ወሰኖችን መጉላላት" },
         {
           title: "ጥራት",
           description: "የፕሪሚየም ቁሳቁሶችን እና የተረጋገጠ የሠራተኛነት ክህሎትን መጠቀም",
         },
-        {
-          title: "ዘላቂነት",
-          description: "ኢኮ-ፍሬንድሊ ተግባሮች እና ተጠያቂ ምንጭ",
-        },
+        { title: "ዘላቂነት", description: "ኢኮ-ፍሬንድሊ ተግባሮች እና ተጠያቂ ምንጭ" },
       ],
       stats: [
         { label: "የተጠናቀቁ ፕሮጀክቶች", value: "200+" },
@@ -104,22 +104,10 @@ export default function AboutPage() {
         { label: "የተጠቀሙ ቁሳቁሶች", value: "25+" },
       ],
       process: [
-        {
-          title: "ምክክር",
-          description: "ፍላጎቶችዎን እና ራዕይዎን መረዳት",
-        },
-        {
-          title: "ንድፍ",
-          description: "ዝርዝር 3D ሞዴሎች እና ዕቅዶች መፍጠር",
-        },
-        {
-          title: "ማምረቻ",
-          description: "CNC ትክክለኛ መቁረጥ እና ማቀናበር",
-        },
-        {
-          title: "አቅርቦት",
-          description: "ሙያዊ መጫን እና ማቀናበር",
-        },
+        { title: "ምክክር", description: "ፍላጎቶችዎን እና ራዕይዎን መረዳት" },
+        { title: "ንድፍ", description: "ዝርዝር 3D ሞዴሎች እና ዕቅዶች መፍጠር" },
+        { title: "ማምረቻ", description: "CNC ትክክለኛ መቁረጥ እና ማቀናበር" },
+        { title: "አቅርቦት", description: "ሙያዊ መጫን እና ማቀናበር" },
       ],
     },
   };
@@ -127,102 +115,133 @@ export default function AboutPage() {
   const t = language === "en" ? content.en : content.am;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-gray-900 to-blue-900 text-white py-20">
-        <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t.title}</h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {t.subtitle}
-            </p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#030712] text-white pt-20">
+      {/* BACKGROUND ELEMENTS */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(37,99,235,0.07),_transparent_50%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.1]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(37, 99, 235, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(37, 99, 235, 0.2) 1px, transparent 1px)`,
+            backgroundSize: "50px 50px",
+          }}
+        />
+      </div>
+
+      {/* HERO SECTION */}
+      <section className="relative py-24 z-10 overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-7xl mx-auto px-4 text-center"
+        >
+          <span className="text-blue-500 font-bold tracking-[0.4em] uppercase text-[10px] mb-4 block">
+            Engineered Legacy
+          </span>
+          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter uppercase italic">
+            {t.title}
+          </h1>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light leading-relaxed">
+            {t.subtitle}
+          </p>
+          <div className="w-24 h-1 bg-blue-600 mx-auto mt-10 shadow-[0_0_20px_rgba(37,99,235,0.5)]" />
+        </motion.div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Mission & Vision */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-blue-600 mb-4">
-              <FiAward className="h-8 w-8" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              {t.mission.title}
-            </h3>
-            <p className="text-gray-600">{t.mission.description}</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-blue-600 mb-4">
-              <FiPackage className="h-8 w-8" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              {t.vision.title}
-            </h3>
-            <p className="text-gray-600">{t.vision.description}</p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-          {t.stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-lg p-6 text-center"
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        {/* MISSION & VISION */}
+        <div className="grid md:grid-cols-2 gap-6 mb-20">
+          {[t.mission, t.vision].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: i === 0 ? -20 : 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-white/5 border border-white/10 p-10 backdrop-blur-md relative group hover:border-blue-500/50 transition-colors"
             >
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {stat.value}
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                {i === 0 ? <FiTarget size={60} /> : <FiZap size={60} />}
               </div>
-              <div className="text-gray-600">{stat.label}</div>
-            </div>
+              <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest mb-4">
+                {item.title}
+              </h3>
+              <p className="text-xl font-medium text-gray-200 leading-relaxed">
+                {item.description}
+              </p>
+            </motion.div>
           ))}
         </div>
 
-        {/* Values */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            {language === "en" ? "Our Core Values" : "የእኛ ዋና እሴቶች"}
-          </h2>
+        {/* STATS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-24">
+          {t.stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white/5 border-l-2 border-blue-600 p-8"
+            >
+              <div className="text-4xl font-black mb-2 tracking-tighter">
+                {stat.value}
+              </div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                {stat.label}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* VALUES */}
+        <div className="mb-24">
+          <div className="flex items-center gap-6 mb-12">
+            <h2 className="text-3xl font-black uppercase tracking-tighter">
+              Core Values
+            </h2>
+            <div className="h-px flex-grow bg-white/10" />
+          </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {t.values.map((value, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-blue-100 p-2 rounded-lg mr-4">
-                    <FiCheck className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {value.title}
-                  </h3>
-                </div>
-                <p className="text-gray-600">{value.description}</p>
+              <div
+                key={index}
+                className="border border-white/5 p-8 hover:bg-white/[0.02] transition-colors"
+              >
+                <FiCheck className="text-blue-500 mb-6 h-6 w-6" />
+                <h3 className="text-lg font-bold mb-3 uppercase tracking-tight">
+                  {value.title}
+                </h3>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  {value.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Process */}
-        <div>
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            {language === "en" ? "Our Process" : "የእኛ ሂደት"}
+        {/* PROCESS */}
+        <div className="pt-20 border-t border-white/10">
+          <h2 className="text-3xl font-black uppercase tracking-tighter text-center mb-16">
+            The Production Workflow
           </h2>
-          <div className="relative">
-            <div className="hidden md:block absolute left-0 right-0 top-1/2 h-0.5 bg-gray-200 -translate-y-1/2"></div>
-            <div className="grid md:grid-cols-4 gap-8">
-              {t.process.map((step, index) => (
-                <div key={index} className="relative">
-                  <div className="bg-white rounded-xl shadow-lg p-6 text-center relative z-10">
-                    <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                      {index + 1}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {step.title}
-                    </h3>
-                    <p className="text-gray-600">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+          <div className="grid md:grid-cols-4 gap-0 border border-white/10">
+            {t.process.map((step, index) => (
+              <div
+                key={index}
+                className="relative p-10 border-b md:border-b-0 md:border-r border-white/10 group hover:bg-blue-600 transition-all duration-500"
+              >
+                <span className="absolute top-4 left-4 text-[10px] font-mono text-white/20 group-hover:text-white/50">
+                  0{index + 1}
+                </span>
+                <h3 className="text-lg font-black text-gray-200 group-hover:text-white mb-4 uppercase tracking-tighter">
+                  {step.title}
+                </h3>
+                <p className="text-gray-500 group-hover:text-blue-100 text-sm">
+                  {step.description}
+                </p>
+                <FiArrowRight className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all" />
+              </div>
+            ))}
           </div>
         </div>
       </div>

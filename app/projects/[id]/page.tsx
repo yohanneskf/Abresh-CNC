@@ -7,6 +7,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiArrowLeft,
   FiShare2,
@@ -14,12 +15,16 @@ import {
   FiPackage,
   FiTool,
   FiDroplet,
-  FiMaximize2,
   FiMessageSquare,
   FiTag,
   FiLoader,
   FiExternalLink,
+  FiChevronLeft,
+  FiChevronRight,
+  FiAlertCircle,
 } from "react-icons/fi";
+
+// Swiper Styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
@@ -54,38 +59,20 @@ export default function ProjectDetailPage() {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Get the project ID from URL params
   const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
-    if (projectId) {
-      fetchProject();
-    } else {
-      setError("No project ID provided");
-      setLoading(false);
-    }
+    if (projectId) fetchProject();
   }, [projectId]);
 
   const fetchProject = async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      console.log("Fetching project with ID:", projectId);
-
       const response = await fetch(`/api/projects/${projectId}`);
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Project not found");
-        }
-        throw new Error(`Failed to fetch project: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error("Project not found");
       const data = await response.json();
       setProject(data);
     } catch (error) {
-      console.error("Error fetching project:", error);
       setError(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setLoading(false);
@@ -96,344 +83,237 @@ export default function ProjectDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: project?.titleEn || "CNC Project",
-          text:
-            project?.descriptionEn?.substring(0, 100) + "..." ||
-            "Check out this CNC furniture project",
+          title: project?.titleEn,
           url: window.location.href,
         });
-      } catch (error) {
-        console.log("Sharing cancelled or failed");
-      }
+      } catch (err) {}
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      alert("Link copied!");
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <FiLoader className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">
-            {language === "en"
-              ? "Loading project details..."
-              : "የፕሮጀክት ዝርዝሮች በመጫን ላይ..."}
-          </p>
-        </div>
+      <div className="min-h-screen bg-[#0a0a0b] flex flex-col items-center justify-center">
+        <FiLoader className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+        <p className="text-gray-500 font-mono text-xs tracking-widest uppercase">
+          Initializing_Project_Data...
+        </p>
       </div>
     );
   }
 
-  if (error || !project) {
+  if (error || !project)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
-        <div className="text-center max-w-md p-8">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiMessageSquare className="h-8 w-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {language === "en" ? "Project Not Found" : "ፕሮጀክት አልተገኙም"}
+      <div className="min-h-screen bg-[#0a0a0b] text-white flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <FiAlertCircle className="h-16 w-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-black mb-4 uppercase tracking-tighter">
+            Project Not Found
           </h2>
-          <p className="text-gray-600 mb-6">
-            {error || "The project you are looking for does not exist."}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/projects"
-              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              <FiArrowLeft className="mr-2 h-5 w-5" />
-              {language === "en" ? "Back to Projects" : "ወደ ፕሮጀክቶች ተመለስ"}
-            </Link>
-            <button
-              onClick={() => router.refresh()}
-              className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
-            >
-              {language === "en" ? "Try Again" : "እንደገና ይሞክሩ"}
-            </button>
-          </div>
+          <Link
+            href="/projects"
+            className="text-blue-500 font-bold uppercase text-xs tracking-[0.2em] flex items-center justify-center hover:gap-3 transition-all"
+          >
+            <FiArrowLeft className="mr-2" /> Return to Catalog
+          </Link>
         </div>
       </div>
     );
-  }
 
   const title = language === "en" ? project.titleEn : project.titleAm;
   const description =
     language === "en" ? project.descriptionEn : project.descriptionAm;
 
-  const categories: Record<string, string> = {
-    living: language === "en" ? "Living Room" : "ክፍል አቀማመጥ",
-    bedroom: language === "en" ? "Bedroom" : "የእርግብ ክፍል",
-    office: language === "en" ? "Office" : "ቢሮ",
-    commercial: language === "en" ? "Commercial" : "ንግድ",
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Navigation */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-[#0a0a0b] text-white pt-24 pb-12 overflow-hidden relative">
+      {/* Background Aesthetic */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Navigation */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
           <Link
             href="/projects"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold group"
+            className="inline-flex items-center text-gray-500 hover:text-blue-500 font-bold text-xs uppercase tracking-[0.2em] mb-12 transition-colors group"
           >
-            <FiArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-            {language === "en" ? "Back to Projects" : "ወደ ፕሮጀክቶች ተመለስ"}
+            <FiArrowLeft className="mr-3 group-hover:-translate-x-2 transition-transform" />
+            {language === "en" ? "Back to Portfolio" : "ወደ ፕሮጀክቶች ተመለስ"}
           </Link>
-        </div>
+        </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Image Gallery */}
-          <div className="space-y-4">
-            {/* Main Image */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="relative aspect-square">
-                {project.images.length > 0 ? (
+        <div className="grid lg:grid-cols-12 gap-12">
+          {/* LEFT: Image System (7 Columns) */}
+          <div className="lg:col-span-7 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative aspect-square md:aspect-[4/3] bg-white/5 border border-white/10 rounded-sm overflow-hidden group shadow-2xl"
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeImageIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full h-full"
+                >
                   <Image
                     src={project.images[activeImageIndex]}
-                    alt={`${title} - Main view`}
+                    alt={title}
                     fill
                     className="object-cover"
                     priority
                   />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-gray-100 flex items-center justify-center">
-                    <FiPackage className="h-16 w-16 text-gray-400" />
-                    <span className="ml-3 text-gray-500">
-                      {language === "en" ? "No image available" : "ምስል አልተገኘም"}
-                    </span>
-                  </div>
-                )}
-                <button
-                  onClick={handleShare}
-                  className="absolute top-4 right-4 bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow"
-                  title={language === "en" ? "Share" : "አጋራ"}
-                >
-                  <FiShare2 className="h-5 w-5 text-gray-700" />
-                </button>
-              </div>
-            </div>
+                </motion.div>
+              </AnimatePresence>
 
-            {/* Thumbnail Gallery */}
+              <button
+                onClick={handleShare}
+                className="absolute top-6 right-6 p-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-full hover:bg-blue-600 transition-all z-20"
+              >
+                <FiShare2 className="h-5 w-5 text-white" />
+              </button>
+
+              {/* Technical Overlay Decor */}
+              <div className="absolute bottom-6 left-6 flex items-center gap-4 opacity-50">
+                <div className="h-10 w-[1px] bg-blue-500" />
+                <span className="text-[10px] font-mono uppercase tracking-tighter">
+                  Render_Mode: Final_Draft
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Thumbnails */}
             {project.images.length > 1 && (
-              <div className="bg-white rounded-2xl shadow-lg p-4">
-                <Swiper
-                  modules={[FreeMode, Thumbs]}
-                  spaceBetween={8}
-                  slidesPerView={4}
-                  freeMode={true}
-                  watchSlidesProgress={true}
-                  onSwiper={setThumbsSwiper}
-                  className="thumbnails"
-                >
-                  {project.images.map((image, index) => (
-                    <SwiperSlide key={index}>
-                      <button
-                        onClick={() => setActiveImageIndex(index)}
-                        className={`relative aspect-square rounded-lg overflow-hidden transition-all ${
-                          activeImageIndex === index
-                            ? "ring-2 ring-blue-500 ring-offset-2"
-                            : "opacity-60 hover:opacity-100"
-                        }`}
-                      >
-                        <Image
-                          src={image}
-                          alt={`${title} - Thumbnail ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </button>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                {project.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`relative aspect-square border-2 transition-all ${
+                      activeImageIndex === idx
+                        ? "border-blue-600"
+                        : "border-white/10 opacity-50 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt="Thumbnail"
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Project Details */}
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-sm font-semibold">
-                      <FiTag className="h-4 w-4" />
-                      {categories[project.category] || project.category}
-                    </span>
-                    {project.featured && (
-                      <span className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-1.5 rounded-full text-sm font-semibold">
-                        <FiTag className="h-4 w-4" />
-                        {language === "en" ? "Featured" : "የተለዩ"}
-                      </span>
-                    )}
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                    {title}
-                  </h1>
-                  <p className="text-gray-500 mt-2 flex items-center">
-                    <FiCalendar className="h-4 w-4 mr-2" />
-                    {new Date(project.createdAt).toLocaleDateString(
-                      language === "en" ? "en-US" : "am-ET",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
-                  </p>
-                </div>
+          {/* RIGHT: Specs Sidebar (5 Columns) */}
+          <div className="lg:col-span-5 space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <span className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1">
+                  {project.category}
+                </span>
+                {project.featured && (
+                  <span className="border border-yellow-500/50 text-yellow-500 text-[10px] font-black uppercase tracking-widest px-3 py-1">
+                    Featured Work
+                  </span>
+                )}
               </div>
 
-              {/* Description */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  {language === "en" ? "Description" : "መግለጫ"}
-                </h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {description}
-                </p>
+              <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter uppercase leading-tight">
+                {title}
+              </h1>
+
+              <div className="flex items-center text-gray-500 text-xs font-mono mb-10">
+                <FiCalendar className="mr-2 text-blue-500" />
+                LOG_DATE: {new Date(project.createdAt).toLocaleDateString()}
               </div>
 
-              {/* Specifications */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="prose prose-invert prose-sm max-w-none text-gray-400 leading-relaxed mb-12">
+                <p>{description}</p>
+              </div>
+
+              {/* Technical Specifications Grid */}
+              <div className="grid grid-cols-1 gap-4 mb-10">
                 {project.dimensions && (
-                  <div className="bg-gray-50 p-6 rounded-xl">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-blue-100 p-3 rounded-lg">
-                        <FiPackage className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          {language === "en" ? "Dimensions" : "የመጠን መለኪያዎች"}
-                        </h4>
-                        <p className="text-2xl font-bold text-gray-900 mt-1">
-                          {project.dimensions.length || "N/A"} ×{" "}
-                          {project.dimensions.width || "N/A"} ×{" "}
-                          {project.dimensions.height || "N/A"}{" "}
-                          {project.dimensions.unit || ""}
-                        </p>
-                      </div>
+                  <div className="p-6 bg-white/5 border-l-2 border-blue-600 flex items-center justify-between group hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <FiPackage className="text-blue-500 h-5 w-5" />
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-gray-500">
+                        Dimensions
+                      </span>
                     </div>
+                    <span className="font-mono text-sm">
+                      {project.dimensions.length} × {project.dimensions.width} ×{" "}
+                      {project.dimensions.height} {project.dimensions.unit}
+                    </span>
                   </div>
                 )}
 
-                <div className="bg-gray-50 p-6 rounded-xl">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <FiDroplet className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">
-                        {language === "en" ? "Finish" : "መጨረሻ"}
-                      </h4>
-                      <p className="text-lg text-gray-700 mt-1">
-                        {language === "en"
-                          ? "Matte Lacquer Finish"
-                          : "ማት ላከር መጨረሻ"}
-                      </p>
-                    </div>
+                <div className="p-6 bg-white/5 border-l-2 border-gray-700 flex items-center justify-between group hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <FiDroplet className="text-blue-500 h-5 w-5" />
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-gray-500">
+                      Finish
+                    </span>
                   </div>
+                  <span className="font-mono text-sm uppercase">
+                    Matte Industrial Lacquer
+                  </span>
                 </div>
               </div>
 
-              {/* Materials */}
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  {language === "en" ? "Materials Used" : "የተጠቀሙ ቁሳቁሶች"}
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {project.materials.map((material, index) => (
+              {/* Materials List */}
+              <div className="mb-12">
+                <h4 className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-500 mb-4">
+                  Material Selection
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {project.materials.map((m, i) => (
                     <span
-                      key={index}
-                      className="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2.5 rounded-lg"
+                      key={i}
+                      className="px-4 py-2 bg-gray-900 border border-white/10 text-xs font-medium hover:border-blue-500 transition-colors"
                     >
-                      <FiTool className="h-4 w-4" />
-                      {material}
+                      {m}
                     </span>
                   ))}
                 </div>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-white/5">
                 <Link
                   href="/contact"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl font-semibold text-center transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-full font-black uppercase text-xs tracking-widest transition-all hover:shadow-[0_0_30px_rgba(37,99,235,0.4)] flex items-center justify-center gap-3"
                 >
-                  <FiMessageSquare className="h-5 w-5" />
-                  {language === "en"
-                    ? "Request Similar Design"
-                    : "ተመሳሳይ ዲዛይን ይጠይቁ"}
+                  <FiMessageSquare className="h-4 w-4" />
+                  {language === "en" ? "Request Quote" : "ዋጋ ይጠይቁ"}
                 </Link>
                 <button
                   onClick={handleShare}
-                  className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-4 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                  className="px-8 border border-white/20 hover:border-white text-white py-5 rounded-full font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-3"
                 >
-                  <FiShare2 className="h-5 w-5" />
-                  {language === "en" ? "Share Project" : "ፕሮጀክት አጋራ"}
+                  <FiShare2 className="h-4 w-4" />
                 </button>
               </div>
-            </div>
-
-            {/* Related Projects */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">
-                {language === "en" ? "You Might Also Like" : "ሊወዱት ይችላሉ"}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Link
-                  href="/projects"
-                  className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-                >
-                  <div className="aspect-video bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                    <FiPackage className="h-8 w-8 text-gray-400 group-hover:text-blue-400" />
-                  </div>
-                  <p className="font-medium text-gray-900 group-hover:text-blue-600">
-                    {language === "en"
-                      ? "View All Projects"
-                      : "ሁሉንም ፕሮጀክቶች ይመልከቱ"}
-                  </p>
-                  <p className="text-sm text-gray-500 flex items-center mt-1">
-                    <FiExternalLink className="h-3 w-3 mr-1" />
-                    {language === "en" ? "Explore more" : "ተጨማሪ ያስሱ"}
-                  </p>
-                </Link>
-                <Link
-                  href="/contact"
-                  className="p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
-                >
-                  <div className="aspect-video bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                    <FiMessageSquare className="h-8 w-8 text-gray-400 group-hover:text-green-400" />
-                  </div>
-                  <p className="font-medium text-gray-900 group-hover:text-green-600">
-                    {language === "en"
-                      ? "Custom Design Request"
-                      : "ብጁ ዲዛይን ጥያቄ"}
-                  </p>
-                  <p className="text-sm text-gray-500 flex items-center mt-1">
-                    <FiExternalLink className="h-3 w-3 mr-1" />
-                    {language === "en" ? "Start a project" : "ፕሮጀክት ይጀምሩ"}
-                  </p>
-                </Link>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
-      <style jsx global>{`
-        .thumbnails .swiper-slide {
-          opacity: 0.4;
-          transition: opacity 0.3s;
-        }
-        .thumbnails .swiper-slide-thumb-active {
-          opacity: 1;
-        }
-      `}</style>
+      {/* Decorative Technical Grid Image */}
     </div>
   );
 }
