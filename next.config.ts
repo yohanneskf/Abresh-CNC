@@ -7,12 +7,13 @@ const nextConfig = {
         hostname: "**",
       },
     ],
-    // If you're using local images
     domains: ["localhost"],
   },
-  // Optional: Add if you have TypeScript issues
-  typescript: {
-    ignoreBuildErrors: false,
+  // Increase body size limit for file uploads
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
   },
 };
 
