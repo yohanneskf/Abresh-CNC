@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 
+//jo
 const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
