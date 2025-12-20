@@ -47,7 +47,8 @@ model ContactSubmission {
   description String
   budget      String?
   timeline    String?
-  files       String[]
+  files       String[]  // For documents/PDFs
+  images      String[]  // Specifically for technical/reference images
   status      String    @default("pending")
   language    String    @default("en")
   createdAt   DateTime  @default(now())

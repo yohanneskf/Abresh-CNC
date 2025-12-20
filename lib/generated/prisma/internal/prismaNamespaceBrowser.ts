@@ -112,6 +112,7 @@ export const ContactSubmissionScalarFieldEnum = {
   budget: 'budget',
   timeline: 'timeline',
   files: 'files',
+  images: 'images',
   status: 'status',
   language: 'language',
   createdAt: 'createdAt',

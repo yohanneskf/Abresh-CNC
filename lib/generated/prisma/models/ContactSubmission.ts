@@ -64,6 +64,7 @@ export type ContactSubmissionCountAggregateOutputType = {
   budget: number
   timeline: number
   files: number
+  images: number
   status: number
   language: number
   createdAt: number
@@ -112,6 +113,7 @@ export type ContactSubmissionCountAggregateInputType = {
   budget?: true
   timeline?: true
   files?: true
+  images?: true
   status?: true
   language?: true
   createdAt?: true
@@ -201,6 +203,7 @@ export type ContactSubmissionGroupByOutputType = {
   budget: string | null
   timeline: string | null
   files: string[]
+  images: string[]
   status: string
   language: string
   createdAt: Date
@@ -238,6 +241,7 @@ export type ContactSubmissionWhereInput = {
   budget?: Prisma.StringNullableFilter<"ContactSubmission"> | string | null
   timeline?: Prisma.StringNullableFilter<"ContactSubmission"> | string | null
   files?: Prisma.StringNullableListFilter<"ContactSubmission">
+  images?: Prisma.StringNullableListFilter<"ContactSubmission">
   status?: Prisma.StringFilter<"ContactSubmission"> | string
   language?: Prisma.StringFilter<"ContactSubmission"> | string
   createdAt?: Prisma.DateTimeFilter<"ContactSubmission"> | Date | string
@@ -254,6 +258,7 @@ export type ContactSubmissionOrderByWithRelationInput = {
   budget?: Prisma.SortOrderInput | Prisma.SortOrder
   timeline?: Prisma.SortOrderInput | Prisma.SortOrder
   files?: Prisma.SortOrder
+  images?: Prisma.SortOrder
   status?: Prisma.SortOrder
   language?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -273,6 +278,7 @@ export type ContactSubmissionWhereUniqueInput = Prisma.AtLeast<{
   budget?: Prisma.StringNullableFilter<"ContactSubmission"> | string | null
   timeline?: Prisma.StringNullableFilter<"ContactSubmission"> | string | null
   files?: Prisma.StringNullableListFilter<"ContactSubmission">
+  images?: Prisma.StringNullableListFilter<"ContactSubmission">
   status?: Prisma.StringFilter<"ContactSubmission"> | string
   language?: Prisma.StringFilter<"ContactSubmission"> | string
   createdAt?: Prisma.DateTimeFilter<"ContactSubmission"> | Date | string
@@ -289,6 +295,7 @@ export type ContactSubmissionOrderByWithAggregationInput = {
   budget?: Prisma.SortOrderInput | Prisma.SortOrder
   timeline?: Prisma.SortOrderInput | Prisma.SortOrder
   files?: Prisma.SortOrder
+  images?: Prisma.SortOrder
   status?: Prisma.SortOrder
   language?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -311,6 +318,7 @@ export type ContactSubmissionScalarWhereWithAggregatesInput = {
   budget?: Prisma.StringNullableWithAggregatesFilter<"ContactSubmission"> | string | null
   timeline?: Prisma.StringNullableWithAggregatesFilter<"ContactSubmission"> | string | null
   files?: Prisma.StringNullableListFilter<"ContactSubmission">
+  images?: Prisma.StringNullableListFilter<"ContactSubmission">
   status?: Prisma.StringWithAggregatesFilter<"ContactSubmission"> | string
   language?: Prisma.StringWithAggregatesFilter<"ContactSubmission"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ContactSubmission"> | Date | string
@@ -327,6 +335,7 @@ export type ContactSubmissionCreateInput = {
   budget?: string | null
   timeline?: string | null
   files?: Prisma.ContactSubmissionCreatefilesInput | string[]
+  images?: Prisma.ContactSubmissionCreateimagesInput | string[]
   status?: string
   language?: string
   createdAt?: Date | string
@@ -343,6 +352,7 @@ export type ContactSubmissionUncheckedCreateInput = {
   budget?: string | null
   timeline?: string | null
   files?: Prisma.ContactSubmissionCreatefilesInput | string[]
+  images?: Prisma.ContactSubmissionCreateimagesInput | string[]
   status?: string
   language?: string
   createdAt?: Date | string
@@ -359,6 +369,7 @@ export type ContactSubmissionUpdateInput = {
   budget?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timeline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   files?: Prisma.ContactSubmissionUpdatefilesInput | string[]
+  images?: Prisma.ContactSubmissionUpdateimagesInput | string[]
   status?: Prisma.StringFieldUpdateOperationsInput | string
   language?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -375,6 +386,7 @@ export type ContactSubmissionUncheckedUpdateInput = {
   budget?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timeline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   files?: Prisma.ContactSubmissionUpdatefilesInput | string[]
+  images?: Prisma.ContactSubmissionUpdateimagesInput | string[]
   status?: Prisma.StringFieldUpdateOperationsInput | string
   language?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -391,6 +403,7 @@ export type ContactSubmissionCreateManyInput = {
   budget?: string | null
   timeline?: string | null
   files?: Prisma.ContactSubmissionCreatefilesInput | string[]
+  images?: Prisma.ContactSubmissionCreateimagesInput | string[]
   status?: string
   language?: string
   createdAt?: Date | string
@@ -407,6 +420,7 @@ export type ContactSubmissionUpdateManyMutationInput = {
   budget?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timeline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   files?: Prisma.ContactSubmissionUpdatefilesInput | string[]
+  images?: Prisma.ContactSubmissionUpdateimagesInput | string[]
   status?: Prisma.StringFieldUpdateOperationsInput | string
   language?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -423,6 +437,7 @@ export type ContactSubmissionUncheckedUpdateManyInput = {
   budget?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timeline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   files?: Prisma.ContactSubmissionUpdatefilesInput | string[]
+  images?: Prisma.ContactSubmissionUpdateimagesInput | string[]
   status?: Prisma.StringFieldUpdateOperationsInput | string
   language?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -439,6 +454,7 @@ export type ContactSubmissionCountOrderByAggregateInput = {
   budget?: Prisma.SortOrder
   timeline?: Prisma.SortOrder
   files?: Prisma.SortOrder
+  images?: Prisma.SortOrder
   status?: Prisma.SortOrder
   language?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -479,11 +495,20 @@ export type ContactSubmissionCreatefilesInput = {
   set: string[]
 }
 
+export type ContactSubmissionCreateimagesInput = {
+  set: string[]
+}
+
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
 export type ContactSubmissionUpdatefilesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type ContactSubmissionUpdateimagesInput = {
   set?: string[]
   push?: string | string[]
 }
@@ -500,6 +525,7 @@ export type ContactSubmissionSelect<ExtArgs extends runtime.Types.Extensions.Int
   budget?: boolean
   timeline?: boolean
   files?: boolean
+  images?: boolean
   status?: boolean
   language?: boolean
   createdAt?: boolean
@@ -516,6 +542,7 @@ export type ContactSubmissionSelectCreateManyAndReturn<ExtArgs extends runtime.T
   budget?: boolean
   timeline?: boolean
   files?: boolean
+  images?: boolean
   status?: boolean
   language?: boolean
   createdAt?: boolean
@@ -532,6 +559,7 @@ export type ContactSubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   budget?: boolean
   timeline?: boolean
   files?: boolean
+  images?: boolean
   status?: boolean
   language?: boolean
   createdAt?: boolean
@@ -548,13 +576,14 @@ export type ContactSubmissionSelectScalar = {
   budget?: boolean
   timeline?: boolean
   files?: boolean
+  images?: boolean
   status?: boolean
   language?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ContactSubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "projectType" | "description" | "budget" | "timeline" | "files" | "status" | "language" | "createdAt" | "updatedAt", ExtArgs["result"]["contactSubmission"]>
+export type ContactSubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "projectType" | "description" | "budget" | "timeline" | "files" | "images" | "status" | "language" | "createdAt" | "updatedAt", ExtArgs["result"]["contactSubmission"]>
 
 export type $ContactSubmissionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ContactSubmission"
@@ -569,6 +598,7 @@ export type $ContactSubmissionPayload<ExtArgs extends runtime.Types.Extensions.I
     budget: string | null
     timeline: string | null
     files: string[]
+    images: string[]
     status: string
     language: string
     createdAt: Date
@@ -1005,6 +1035,7 @@ export interface ContactSubmissionFieldRefs {
   readonly budget: Prisma.FieldRef<"ContactSubmission", 'String'>
   readonly timeline: Prisma.FieldRef<"ContactSubmission", 'String'>
   readonly files: Prisma.FieldRef<"ContactSubmission", 'String[]'>
+  readonly images: Prisma.FieldRef<"ContactSubmission", 'String[]'>
   readonly status: Prisma.FieldRef<"ContactSubmission", 'String'>
   readonly language: Prisma.FieldRef<"ContactSubmission", 'String'>
   readonly createdAt: Prisma.FieldRef<"ContactSubmission", 'DateTime'>

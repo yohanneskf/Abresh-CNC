@@ -3,49 +3,34 @@ import prisma from "@/prisma/client";
 
 export async function POST(request: Request) {
   try {
-    console.log("Contact form submission received");
-
     const data = await request.json();
 
-    // Validate required fields
-    if (
-      !data.name ||
-      !data.email ||
-      !data.phone ||
-      !data.projectType ||
-      !data.description
-    ) {
-      console.log("Missing required fields:", {
-        name: !data.name,
-        email: !data.email,
-        phone: !data.phone,
-        projectType: !data.projectType,
-        description: !data.description,
+    // 1. Validate required fields
+    const required = ["name", "email", "phone", "projectType", "description"];
+    for (const field of required) {
+      if (!data[field]) {
+        return NextResponse.json(
+          { error: `Missing: ${field}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 2. Sort Incoming Files/Images
+    const images: string[] = [];
+    const documents: string[] = [];
+
+    if (data.files && Array.isArray(data.files)) {
+      data.files.forEach((file: string) => {
+        if (file.startsWith("data:image/")) {
+          images.push(file);
+        } else {
+          documents.push(file);
+        }
       });
-
-      return NextResponse.json(
-        {
-          error: "Missing required fields",
-          required: ["name", "email", "phone", "projectType", "description"],
-        },
-        { status: 400 }
-      );
     }
 
-    // Handle images from the form
-    let files: string[] = [];
-    if (data.images && Array.isArray(data.images)) {
-      // Filter only valid image data URLs
-      files = data.images.filter(
-        (img: string) =>
-          img &&
-          (img.startsWith("data:image/") ||
-            img.startsWith("data:application/pdf"))
-      );
-      console.log(`Received ${files.length} valid file(s)`);
-    }
-
-    // Create submission in database
+    // 3. Create Submission with Amber System mapping
     const submission = await prisma.contactSubmission.create({
       data: {
         name: data.name.trim(),
@@ -53,44 +38,31 @@ export async function POST(request: Request) {
         phone: data.phone.trim(),
         projectType: data.projectType,
         description: data.description,
-        budget: data.budget || "",
-        timeline: data.timeline || "",
-        files: files, // Store image data URLs
+        budget: data.budget || "TBD",
+        timeline: data.timeline || "Standard",
+        images: images, // Saved to new images field
+        files: documents, // Saved to files field
         status: "pending",
         language: data.language || "en",
       },
     });
 
-    console.log("✅ Submission created successfully:", {
-      id: submission.id,
-      name: submission.name,
-      email: submission.email,
-      filesCount: files.length,
-    });
-
-    // Send success response
     return NextResponse.json(
       {
         success: true,
-        message: "Submission received successfully",
-        submissionId: submission.id,
-        filesCount: files.length,
+        id: submission.id,
+        msg: "DATA_PACKET_RECEIVED", // Keeping the industrial theme
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("❌ Error creating submission:", error);
-
+    console.error("CRITICAL_DB_ERROR:", error);
     return NextResponse.json(
-      {
-        error: "Error submitting form",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "INTERNAL_SYS_FAILURE" },
       { status: 500 }
     );
   }
 }
-
 // Also add GET method for testing
 export async function GET() {
   return NextResponse.json({
