@@ -64,14 +64,31 @@ export async function POST(request: Request) {
   }
 }
 // Also add GET method for testing
-export async function GET() {
-  return NextResponse.json({
-    message: "Contact API is working",
-    status: "active",
-    instructions: {
-      POST: "Submit contact form with JSON data",
-      required_fields: ["name", "email", "phone", "projectType", "description"],
-      optional_fields: ["budget", "timeline", "images", "language"],
-    },
-  });
+export async function GET(request: Request) {
+  try {
+    // ... Auth logic remains the same
+
+    const submissions = await prisma.contactSubmission.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        projectType: true,
+        description: true,
+        budget: true,
+        timeline: true,
+        files: true,
+        images: true, // 👈 ADD THIS LINE
+        status: true,
+        language: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json(submissions);
+  } catch (error) {
+    // ... error handling
+  }
 }
