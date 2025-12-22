@@ -5,31 +5,10 @@ export async function GET() {
   try {
     const projects = await prisma.project.findMany({
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        titleEn: true,
-        titleAm: true,
-        descriptionEn: true,
-        descriptionAm: true,
-        category: true,
-        materials: true,
-        images: true,
-        featured: true,
-        dimensions: true,
-        createdAt: true,
-      },
     });
-
     return NextResponse.json(projects);
   } catch (error) {
-    console.error("Error fetching projects:", error);
-    return NextResponse.json(
-      {
-        error: "Error fetching projects",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "FETCH_FAILED" }, { status: 500 });
   }
 }
 
@@ -37,6 +16,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    // Ensure dimensions are handled as a structured object
     const project = await prisma.project.create({
       data: {
         titleEn: body.titleEn,
@@ -45,17 +25,32 @@ export async function POST(request: Request) {
         descriptionAm: body.descriptionAm,
         category: body.category,
         materials: body.materials,
-        dimensions: body.dimensions,
-        images: body.images,
-        featured: body.featured || false,
+        dimensions: body.dimensions, // Stored as JSON in Prisma
+        images: body.images, // Array of EdgeStore URLs
+        featured: Boolean(body.featured),
       },
     });
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
+    console.error("DB_WRITE_ERROR:", error);
     return NextResponse.json(
-      { error: "Error creating project" },
+      { error: "DATABASE_INJECTION_FAILED" },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id)
+      return NextResponse.json({ error: "ID_REQUIRED" }, { status: 400 });
+
+    await prisma.project.delete({ where: { id } });
+    return NextResponse.json({ message: "ENTRY_DELETED" });
+  } catch (error) {
+    return NextResponse.json({ error: "ERASURE_FAILED" }, { status: 500 });
   }
 }
