@@ -13,6 +13,7 @@ import {
   FiActivity,
   FiTerminal,
 } from "react-icons/fi";
+import { FaTelegramPlane } from "react-icons/fa"; // Official Telegram Icon
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -24,40 +25,44 @@ export default function Footer() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Updated with your actual credentials
   const contactInfo = [
     {
       icon: <FiPhone />,
-      text: language === "en" ? "+251 911 123456" : "+251 911 123456",
+      text: "+251 910 699 610",
       label: "COMMS_VOICE",
+      href: "tel:+251910699610",
+    },
+    {
+      icon: <FaTelegramPlane />,
+      text: "@Aberham_Tekebay",
+      label: "SECURE_CHAT",
+      href: "https://t.me/Aberham_Tekebay",
     },
     {
       icon: <FiMail />,
-      text: "contact@cncdesign.com",
+      text: "abtekebay@gmail.com",
       label: "COMMS_DATA",
-    },
-    {
-      icon: <FiMapPin />,
-      text: language === "en" ? "Addis Ababa, Ethiopia" : "አዲስ አበባ, ኢትዮጵያ",
-      label: "GEO_LOCATION",
+      href: "mailto:abtekebay@gmail.com",
     },
   ];
 
   const socialLinks = [
-    { icon: <FiFacebook />, href: "https://facebook.com", label: "FB_01" },
-    { icon: <FiInstagram />, href: "https://instagram.com", label: "IG_02" },
-    { icon: <FiLinkedin />, href: "https://linkedin.com", label: "LI_03" },
+    { icon: <FiFacebook />, href: "#", label: "FB_01" },
+    { icon: <FiInstagram />, href: "#", label: "IG_02" },
+    { icon: <FiLinkedin />, href: "#", label: "LI_03" },
   ];
 
   const labelStyles =
-    "text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 mb-8 flex items-center gap-2";
+    "text-[10px] font-black uppercase tracking-[0.4em] text-amber-500 mb-8 flex items-center gap-2";
 
   return (
-    <footer className="relative bg-[#030712] text-white border-t border-white/10 overflow-hidden selection:bg-blue-500/30">
+    <footer className="relative bg-[#030712] text-white border-t border-white/10 overflow-hidden selection:bg-amber-500/30">
       {/* 1. Structural Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
       {/* 2. Top Scanner Line */}
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-600 to-transparent shadow-[0_0_15px_#2563eb]" />
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-600 to-transparent shadow-[0_0_15px_#d97706]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
@@ -68,11 +73,11 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <Link href="/" className="group flex items-center gap-2 mb-8">
-              <div className="w-8 h-8 border border-blue-500 flex items-center justify-center">
-                <FiCpu className="text-blue-500 text-sm group-hover:rotate-90 transition-transform duration-500" />
+              <div className="w-8 h-8 border border-amber-500 flex items-center justify-center">
+                <FiCpu className="text-amber-500 text-sm group-hover:rotate-90 transition-transform duration-500" />
               </div>
               <span className="text-xl font-black tracking-tighter uppercase italic">
-                CNC<span className="text-blue-500 not-italic">_DESIGN</span>
+                CNC<span className="text-amber-500 not-italic">_DESIGN</span>
               </span>
             </Link>
             <p className="text-gray-500 text-[11px] font-medium leading-relaxed mb-10 max-w-xs uppercase tracking-wider">
@@ -85,7 +90,7 @@ export default function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
-                  className="w-10 h-10 flex flex-col items-center justify-center border border-white/10 bg-white/5 hover:border-blue-500 hover:text-blue-500 transition-all text-xs"
+                  className="w-10 h-10 flex flex-col items-center justify-center border border-white/10 bg-white/5 hover:border-amber-500 hover:text-amber-500 transition-all text-xs"
                 >
                   {social.icon}
                   <span className="text-[7px] font-mono mt-1 opacity-50">
@@ -113,7 +118,7 @@ export default function Footer() {
                     href={key === "home" ? "/" : `/${key}`}
                     className="text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-3 group"
                   >
-                    <span className="text-blue-500/30 font-mono text-[8px]">
+                    <span className="text-amber-500/30 font-mono text-[8px]">
                       0{i + 1}
                     </span>
                     <span className="group-hover:translate-x-1 transition-transform">
@@ -144,16 +149,16 @@ export default function Footer() {
               ].map((item) => (
                 <li
                   key={item}
-                  className="text-gray-500 hover:text-blue-400 text-[10px] font-mono cursor-pointer transition-colors flex items-center gap-3 group"
+                  className="text-gray-500 hover:text-amber-400 text-[10px] font-mono cursor-pointer transition-colors flex items-center gap-3 group"
                 >
-                  <div className="w-1 h-1 bg-blue-500/20 group-hover:bg-blue-500" />
+                  <div className="w-1 h-1 bg-amber-500/20 group-hover:bg-amber-500" />
                   {item}
                 </li>
               ))}
             </ul>
           </motion.div>
 
-          {/* Module 04: Terminal Contact */}
+          {/* Module 04: Terminal Contact (Updated with your links) */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -166,14 +171,26 @@ export default function Footer() {
             <ul className="space-y-6">
               {contactInfo.map((info, index) => (
                 <li key={index} className="flex flex-col gap-1 group">
-                  <span className="text-[8px] font-mono text-blue-500/50">
+                  <span className="text-[8px] font-mono text-amber-500/50">
                     {info.label}
                   </span>
-                  <span className="text-gray-400 text-[11px] font-bold uppercase tracking-widest group-hover:text-white transition-colors">
+                  <a
+                    href={info.href}
+                    target={info.href.startsWith("http") ? "_blank" : undefined}
+                    className="text-gray-400 text-[11px] font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors flex items-center gap-2"
+                  >
                     {info.text}
-                  </span>
+                  </a>
                 </li>
               ))}
+              <li className="flex flex-col gap-1">
+                <span className="text-[8px] font-mono text-amber-500/50">
+                  GEO_LOCATION
+                </span>
+                <span className="text-gray-400 text-[11px] font-bold uppercase tracking-widest italic">
+                  Addis Ababa, Ethiopia
+                </span>
+              </li>
             </ul>
           </motion.div>
         </div>
@@ -187,7 +204,7 @@ export default function Footer() {
             <div className="hidden sm:block h-3 w-[1px] bg-white/10" />
             <Link
               href="/privacy"
-              className="text-gray-700 hover:text-blue-500 text-[9px] font-mono uppercase tracking-[0.3em] transition-colors"
+              className="text-gray-700 hover:text-amber-500 text-[9px] font-mono uppercase tracking-[0.3em] transition-colors"
             >
               Privacy_Protocol
             </Link>
@@ -195,10 +212,10 @@ export default function Footer() {
 
           <button
             onClick={scrollToTop}
-            className="group relative flex items-center justify-center w-12 h-12 border border-white/10 hover:border-blue-500 transition-all"
+            className="group relative flex items-center justify-center w-12 h-12 border border-white/10 hover:border-amber-500 transition-all"
           >
-            <FiArrowUp className="text-gray-500 group-hover:text-blue-500 group-hover:-translate-y-1 transition-all" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600/20 group-hover:bg-blue-600 transition-colors" />
+            <FiArrowUp className="text-gray-500 group-hover:text-amber-500 group-hover:-translate-y-1 transition-all" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-600/20 group-hover:bg-amber-600 transition-colors" />
           </button>
         </div>
       </div>
