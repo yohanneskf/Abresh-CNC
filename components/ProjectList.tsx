@@ -12,6 +12,7 @@ import {
   FiCpu,
   FiImage,
   FiLoader,
+  FiAlertTriangle,
 } from "react-icons/fi";
 
 interface Project {
@@ -27,11 +28,12 @@ interface Project {
 
 interface ProjectListProps {
   projects: Project[];
-  onUpdate: () => void; // Trigger a refresh in the parent dashboard
+  onUpdate: () => void;
 }
 
 export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projectToPurge, setProjectToPurge] = useState<Project | null>(null); // New state for professional delete
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   const categories: Record<string, string> = {
@@ -41,16 +43,20 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
     commercial: "Business_Retail",
   };
 
-  // --- PROTOCOL: PURGE ASSET ---
-  async function deleteProject(id: string) {
-    if (!confirm("CONFIRM_PERMANENT_ERASURE?")) return;
+  // --- PROTOCOL: EXECUTE PURGE ---
+  async function handlePurge() {
+    if (!projectToPurge) return;
 
+    const id = projectToPurge.id;
     setIsProcessing(id);
     try {
       const res = await fetch(`/api/projects?id=${id}`, {
         method: "DELETE",
       });
-      if (res.ok) onUpdate();
+      if (res.ok) {
+        onUpdate();
+        setProjectToPurge(null);
+      }
     } catch (error) {
       console.error("ERASURE_FAILURE", error);
     } finally {
@@ -62,9 +68,8 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
   async function toggleFeatured(id: string, currentStatus: boolean) {
     setIsProcessing(id);
     try {
-      // Note: We use the POST/PUT logic here to update the project status
       const res = await fetch(`/api/projects`, {
-        method: "POST", // Adjust to PUT if your route specifically handles updates
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id,
@@ -72,8 +77,6 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
           updateOnly: true,
         }),
       });
-      // Tip: If your current POST route only creates, you may need a separate
-      // PATCH /api/projects route or handle 'updateOnly' in the route logic.
       if (res.ok) onUpdate();
     } catch (error) {
       console.error("PRIORITY_UPDATE_FAILURE", error);
@@ -120,7 +123,6 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
                 key={project.id}
                 className="hover:bg-white/[0.02] group transition-colors"
               >
-                {/* Visual Thumbnail */}
                 <td className="px-6 py-4">
                   <div className="w-12 h-12 bg-black border border-white/10 overflow-hidden">
                     {project.images?.[0] ? (
@@ -170,14 +172,10 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
                       <FiEye size={14} />
                     </button>
                     <button
-                      onClick={() => deleteProject(project.id)}
+                      onClick={() => setProjectToPurge(project)} // Trigger professional modal
                       className="p-2 bg-white/5 border border-white/10 hover:border-red-500 text-gray-500 hover:text-red-500 transition-all"
                     >
-                      {isProcessing === project.id ? (
-                        <FiLoader className="animate-spin" />
-                      ) : (
-                        <FiTrash2 size={14} />
-                      )}
+                      <FiTrash2 size={14} />
                     </button>
                   </div>
                 </td>
@@ -187,7 +185,81 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
         </table>
       </div>
 
-      {/* Asset Inspection Modal (Displaying Full Images) */}
+      {/* --- PROFESSIONAL PURGE PROTOCOL MODAL --- */}
+      <AnimatePresence>
+        {projectToPurge && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+              onClick={() => !isProcessing && setProjectToPurge(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-[#0a0a0b] border border-red-500/30 overflow-hidden"
+            >
+              {/* Warning Header */}
+              <div className="bg-red-500/10 p-4 border-b border-red-500/20 flex items-center gap-3">
+                <FiAlertTriangle className="text-red-500 animate-pulse" />
+                <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">
+                  Security_Warning // Purge_Request
+                </span>
+              </div>
+
+              <div className="p-8 text-center">
+                <p className="text-gray-500 text-[11px] uppercase tracking-widest mb-6 leading-relaxed">
+                  You are about to initiate{" "}
+                  <span className="text-white">Permanent_Erasure</span> of
+                  asset:
+                  <br />
+                  <span className="text-blue-500 font-bold">
+                    [{projectToPurge.titleEn}]
+                  </span>
+                </p>
+
+                <div className="bg-white/[0.02] border border-white/5 p-4 mb-8">
+                  <p className="text-[9px] text-gray-600 uppercase tracking-tighter">
+                    Warning: This action cannot be reversed. Data clusters and
+                    visual nodes will be scrubbed from the main-frame.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setProjectToPurge(null)}
+                    disabled={!!isProcessing}
+                    className="flex-1 py-3 border border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Abort_Mission
+                  </button>
+                  <button
+                    onClick={handlePurge}
+                    disabled={!!isProcessing}
+                    className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? (
+                      <FiLoader className="animate-spin" />
+                    ) : (
+                      <>
+                        <FiTrash2 /> Confirm_Erasure
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Decorative Scan Line */}
+              <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-500/20" />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Asset Inspection Modal (Existing) */}
       <AnimatePresence>
         {selectedProject && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -220,7 +292,6 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
               </div>
 
               <div className="p-8 grid md:grid-cols-2 gap-8">
-                {/* Images View */}
                 <div className="space-y-4">
                   <div className="aspect-video bg-black border border-white/5 overflow-hidden">
                     {selectedProject.images?.[0] ? (
@@ -249,7 +320,6 @@ export default function ProjectList({ projects, onUpdate }: ProjectListProps) {
                   </div>
                 </div>
 
-                {/* Metadata View */}
                 <div className="space-y-6">
                   <div>
                     <span className="text-[9px] text-gray-600 block mb-1">
