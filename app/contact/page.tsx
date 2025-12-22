@@ -5,7 +5,7 @@ import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useEdgeStore } from "@/lib/edgestore"; // Ensure path is correct
+import { useEdgeStore } from "@/lib/edgestore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSend,
@@ -15,11 +15,11 @@ import {
   FiLoader,
   FiPhone,
   FiMail,
-  FiInfo,
   FiFileText,
   FiCpu,
+  FiExternalLink,
 } from "react-icons/fi";
-import Image from "next/image";
+import { FaTelegramPlane } from "react-icons/fa"; // Importing official Telegram icon
 
 const schema = yup.object({
   name: yup.string().required("Identification required"),
@@ -34,14 +34,12 @@ const schema = yup.object({
 type FormData = yup.InferType<typeof schema>;
 
 export default function ContactPage() {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const { edgestore } = useEdgeStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
-
-  // Store actual File objects for EdgeStore
   const [rawFiles, setRawFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<{ url: string; type: string }[]>([]);
 
@@ -57,7 +55,6 @@ export default function ContactPage() {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
       setRawFiles((prev) => [...prev, ...selectedFiles]);
-
       selectedFiles.forEach((file) => {
         const url = URL.createObjectURL(file);
         setPreviews((prev) => [
@@ -76,12 +73,10 @@ export default function ContactPage() {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsSubmitting(true);
     setError("");
-
     try {
       const uploadedImageUrls: string[] = [];
       const uploadedFileUrls: string[] = [];
 
-      // 1. Upload all files to EdgeStore first
       await Promise.all(
         rawFiles.map(async (file) => {
           const res = await edgestore.publicFiles.upload({ file });
@@ -93,7 +88,6 @@ export default function ContactPage() {
         })
       );
 
-      // 2. Send URLs to your local API
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,7 +102,6 @@ export default function ContactPage() {
       if (!response.ok) throw new Error("UPSTREAM_COMM_FAILURE");
       setIsSubmitted(true);
     } catch (err) {
-      console.error(err);
       setError("System encountered an error during file uplink.");
     } finally {
       setIsSubmitting(false);
@@ -117,17 +110,17 @@ export default function ContactPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-[#030712] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#030712] flex items-center justify-center p-6 font-mono">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="max-w-md w-full bg-white/5 border border-amber-500/30 p-12 text-center"
         >
-          <FiCheckCircle className="h-16 w-16 text-amber-500 mx-auto mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]" />
-          <h2 className="text-3xl font-black mb-4 uppercase text-white">
+          <FiCheckCircle className="h-16 w-16 text-amber-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-black mb-4 uppercase text-white tracking-widest">
             Transmission Received
           </h2>
-          <p className="text-gray-400 mb-8 italic italic">
+          <p className="text-gray-500 mb-8 text-[10px] uppercase italic">
             Parameters logged. Awaiting technical review.
           </p>
           <button
@@ -142,7 +135,8 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white pt-28 pb-20 relative overflow-hidden selection:bg-amber-500/30">
+    <div className="min-h-screen bg-[#030712] text-white pt-28 pb-20 relative overflow-hidden font-mono selection:bg-amber-500/30">
+      {/* HUD Grid Effect */}
       <div
         className="absolute inset-0 opacity-[0.05] pointer-events-none"
         style={{
@@ -162,12 +156,12 @@ export default function ContactPage() {
         </header>
 
         <div className="grid lg:grid-cols-12 gap-0 border border-white/10 bg-white/[0.02] backdrop-blur-md">
+          {/* Main Intake Form */}
           <div className="lg:col-span-8 p-8 md:p-12 border-b lg:border-b-0 lg:border-r border-white/10">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-              {/* Identity Section */}
               <section>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className="text-amber-500 font-mono text-xs">01</span>
+                  <span className="text-amber-500 text-xs">01</span>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                     Entity_Identification
                   </h3>
@@ -179,11 +173,11 @@ export default function ContactPage() {
                     </label>
                     <input
                       {...register("name")}
-                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all placeholder:text-gray-800"
-                      placeholder="ENTRY_REQUIRED"
+                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all"
+                      placeholder="ID_REQUIRED"
                     />
                     {errors.name && (
-                      <span className="text-[9px] text-red-500 font-mono">
+                      <span className="text-[9px] text-red-500">
                         {errors.name.message}
                       </span>
                     )}
@@ -194,17 +188,16 @@ export default function ContactPage() {
                     </label>
                     <input
                       {...register("email")}
-                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all placeholder:text-gray-800"
+                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all"
                       placeholder="USER@DOMAIN.COM"
                     />
                   </div>
                 </div>
               </section>
 
-              {/* Specs Section */}
               <section>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className="text-amber-500 font-mono text-xs">02</span>
+                  <span className="text-amber-500 text-xs">02</span>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                     Project_Parameters
                   </h3>
@@ -256,10 +249,9 @@ export default function ContactPage() {
                 </div>
               </section>
 
-              {/* Attachments Section */}
               <section>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className="text-amber-500 font-mono text-xs">03</span>
+                  <span className="text-amber-500 text-xs">03</span>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                     Technical_Attachments
                   </h3>
@@ -312,7 +304,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-6 bg-amber-600 text-[#030712] font-black uppercase text-[12px] tracking-[0.5em] hover:bg-amber-500 transition-all flex items-center justify-center gap-4 group disabled:opacity-50"
+                className="w-full py-6 bg-amber-600 text-[#030712] font-black uppercase text-[12px] tracking-[0.5em] hover:bg-amber-500 transition-all flex items-center justify-center gap-4 group disabled:opacity-50 shadow-[0_0_30px_rgba(245,158,11,0.2)]"
               >
                 {isSubmitting ? (
                   <FiLoader className="animate-spin" />
@@ -325,19 +317,100 @@ export default function ContactPage() {
             </form>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4 bg-white/[0.01] p-10 space-y-12">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 flex items-center gap-2">
-              <FiCpu /> Logic_Support
-            </h4>
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 text-gray-400 font-mono text-[11px]">
-                <FiPhone className="text-amber-500" /> +251 911 123456
+          {/* Direct Communication Sidebar */}
+          <div className="lg:col-span-4 bg-white/[0.01] p-10 space-y-16">
+            <section>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 flex items-center gap-2 mb-10">
+                <FiCpu /> Logic_Support
+              </h4>
+              <div className="space-y-8">
+                {/* Phone Protocol */}
+                <a
+                  href="tel:+251910699610"
+                  className="flex items-center gap-5 text-gray-400 hover:text-white transition-colors group"
+                >
+                  <div className="p-3 bg-white/5 border border-white/10 group-hover:border-amber-500/50 group-hover:bg-amber-500/5 transition-all">
+                    <FiPhone className="text-amber-500 h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-gray-600 block tracking-widest uppercase mb-1">
+                      Direct_Line
+                    </span>
+                    <span className="text-[11px] font-bold">
+                      +251 910 699 610
+                    </span>
+                  </div>
+                </a>
+
+                {/* Email Protocol */}
+                <a
+                  href="mailto:abtekebay@gmail.com"
+                  className="flex items-center gap-5 text-gray-400 hover:text-white transition-colors group"
+                >
+                  <div className="p-3 bg-white/5 border border-white/10 group-hover:border-amber-500/50 group-hover:bg-amber-500/5 transition-all">
+                    <FiMail className="text-amber-500 h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-gray-600 block tracking-widest uppercase mb-1">
+                      Mail_Endpoint
+                    </span>
+                    <span className="text-[11px] font-bold uppercase tracking-tighter">
+                      abtekebay@gmail.com
+                    </span>
+                  </div>
+                </a>
+
+                {/* Telegram Protocol */}
+                <a
+                  href="https://t.me/Aberham_Tekebay"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-5 text-gray-400 hover:text-white transition-colors group"
+                >
+                  <div className="p-3 bg-white/5 border border-white/10 group-hover:border-amber-500/50 group-hover:bg-amber-500/5 transition-all">
+                    <FaTelegramPlane className="text-amber-500 h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-gray-600 block tracking-widest uppercase mb-1">
+                      Secure_Chat
+                    </span>
+                    <span className="text-[11px] font-bold tracking-tighter">
+                      @ABERHAM_TEKEBAY
+                    </span>
+                  </div>
+                </a>
               </div>
-              <div className="flex items-center gap-4 text-gray-400 font-mono text-[11px] uppercase">
-                <FiMail className="text-amber-500" /> log@cnc_core.io
+            </section>
+
+            {/* Quick Action Protocols */}
+            <section className="pt-8 border-t border-white/5">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-6">
+                Direct_Comm_Protocols
+              </h4>
+              <div className="grid grid-cols-1 gap-4">
+                <a
+                  href="https://t.me/Aberham_Tekebay"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-4 bg-white/5 border border-white/10 hover:border-amber-500 text-[9px] font-black uppercase tracking-widest flex items-center justify-between px-6 transition-all group hover:bg-amber-500/5"
+                >
+                  <span className="flex items-center gap-3">
+                    <FaTelegramPlane className="text-amber-500" />{" "}
+                    Telegram_Direct
+                  </span>
+                  <FiExternalLink className="group-hover:translate-x-1 transition-transform" />
+                </a>
+                <a
+                  href="mailto:abtekebay@gmail.com"
+                  className="w-full py-4 bg-white/5 border border-white/10 hover:border-amber-500 text-[9px] font-black uppercase tracking-widest flex items-center justify-between px-6 transition-all group hover:bg-amber-500/5"
+                >
+                  <span className="flex items-center gap-3">
+                    <FiMail className="text-amber-500" /> Initialize_Email
+                  </span>
+                  <FiExternalLink className="group-hover:translate-x-1 transition-transform" />
+                </a>
               </div>
-            </div>
+            </section>
           </div>
         </div>
       </div>
