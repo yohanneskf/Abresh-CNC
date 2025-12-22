@@ -5,8 +5,8 @@ import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useEdgeStore } from "@/lib/edgestore";
-import { motion } from "framer-motion";
+import { useEdgeStore } from "@/lib/edgestore"; // Ensure path is correct
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSend,
   FiUpload,
@@ -15,19 +15,18 @@ import {
   FiLoader,
   FiPhone,
   FiMail,
+  FiInfo,
   FiFileText,
   FiCpu,
 } from "react-icons/fi";
+import Image from "next/image";
 
 const schema = yup.object({
   name: yup.string().required("Identification required"),
-  email: yup
-    .string()
-    .email("Invalid data format")
-    .required("Communication endpoint required"),
-  phone: yup.string().required("Contact frequency required"),
+  email: yup.string().email("Invalid format").required("Email required"),
+  phone: yup.string().required("Phone required"),
   projectType: yup.string().required("Classification required"),
-  description: yup.string().required("Technical brief required"),
+  description: yup.string().required("Brief required"),
   budget: yup.string(),
   timeline: yup.string(),
 });
@@ -36,16 +35,14 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function ContactPage() {
   const { language, t } = useLanguage();
-  const { edgestore } = useEdgeStore(); // Initialize EdgeStore
+  const { edgestore } = useEdgeStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState("");
 
-  // Store URLs returned from EdgeStore
-  const [images, setImages] = useState<string[]>([]);
-  const [files, setFiles] = useState<string[]>([]);
+  // Store actual File objects for EdgeStore
+  const [rawFiles, setRawFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<{ url: string; type: string }[]>([]);
 
   const {
@@ -56,68 +53,54 @@ export default function ContactPage() {
     resolver: yupResolver(schema) as Resolver<FormData>,
   });
 
-  const projectTypes = [
-    "Custom Furniture",
-    "Office Setup",
-    "Home Furniture",
-    "Commercial Space",
-    "CNC Manufacturing",
-    "Design Consultation",
-    "Other",
-  ];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      setRawFiles((prev) => [...prev, ...selectedFiles]);
 
-  // Logic to upload to EdgeStore
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles) return;
-
-    setIsUploading(true);
-    const filesArray = Array.from(selectedFiles);
-
-    try {
-      for (const file of filesArray) {
-        // Upload to EdgeStore
-        const res = await edgestore.publicFiles.upload({
-          file,
-          onProgressChange: (progress) => {
-            console.log(`Uploading: ${progress}%`);
-          },
-        });
-
-        // Sort into Images or Files (PDFs) based on type
-        if (file.type.startsWith("image/")) {
-          setImages((prev) => [...prev, res.url]);
-          setPreviews((prev) => [...prev, { url: res.url, type: "image" }]);
-        } else {
-          setFiles((prev) => [...prev, res.url]);
-          setPreviews((prev) => [...prev, { url: res.url, type: "pdf" }]);
-        }
-      }
-    } catch (err) {
-      setError("FILE_UPLOAD_PROTOCOL_ERROR");
-    } finally {
-      setIsUploading(false);
+      selectedFiles.forEach((file) => {
+        const url = URL.createObjectURL(file);
+        setPreviews((prev) => [
+          ...prev,
+          { url, type: file.type.startsWith("image/") ? "image" : "pdf" },
+        ]);
+      });
     }
   };
 
   const removeFile = (index: number) => {
+    setRawFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => prev.filter((_, i) => i !== index));
-    // In production, you might also want to call edgestore.publicFiles.delete({ url })
   };
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    if (isUploading) return;
     setIsSubmitting(true);
     setError("");
 
     try {
+      const uploadedImageUrls: string[] = [];
+      const uploadedFileUrls: string[] = [];
+
+      // 1. Upload all files to EdgeStore first
+      await Promise.all(
+        rawFiles.map(async (file) => {
+          const res = await edgestore.publicFiles.upload({ file });
+          if (file.type.startsWith("image/")) {
+            uploadedImageUrls.push(res.url);
+          } else {
+            uploadedFileUrls.push(res.url);
+          }
+        })
+      );
+
+      // 2. Send URLs to your local API
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          images, // Array of URLs
-          files, // Array of URLs
+          images: uploadedImageUrls,
+          files: uploadedFileUrls,
           language,
         }),
       });
@@ -125,7 +108,8 @@ export default function ContactPage() {
       if (!response.ok) throw new Error("UPSTREAM_COMM_FAILURE");
       setIsSubmitted(true);
     } catch (err) {
-      setError("System encountered an error during transmission.");
+      console.error(err);
+      setError("System encountered an error during file uplink.");
     } finally {
       setIsSubmitting(false);
     }
@@ -133,18 +117,18 @@ export default function ContactPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-[#030712] flex items-center justify-center p-6 text-white font-mono">
+      <div className="min-h-screen bg-[#030712] flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="max-w-md w-full bg-white/5 border border-amber-500/30 p-12 text-center"
         >
-          <FiCheckCircle className="h-16 w-16 text-amber-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-black mb-4 uppercase">
+          <FiCheckCircle className="h-16 w-16 text-amber-500 mx-auto mb-6 shadow-[0_0_30px_rgba(245,158,11,0.2)]" />
+          <h2 className="text-3xl font-black mb-4 uppercase text-white">
             Transmission Received
           </h2>
-          <p className="text-gray-400 mb-8 italic">
-            Parameters logged. URLs mapped to database.
+          <p className="text-gray-400 mb-8 italic italic">
+            Parameters logged. Awaiting technical review.
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -158,7 +142,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white pt-28 pb-20 relative overflow-hidden font-mono selection:bg-amber-500/30">
+    <div className="min-h-screen bg-[#030712] text-white pt-28 pb-20 relative overflow-hidden selection:bg-amber-500/30">
       <div
         className="absolute inset-0 opacity-[0.05] pointer-events-none"
         style={{
@@ -180,63 +164,89 @@ export default function ContactPage() {
         <div className="grid lg:grid-cols-12 gap-0 border border-white/10 bg-white/[0.02] backdrop-blur-md">
           <div className="lg:col-span-8 p-8 md:p-12 border-b lg:border-b-0 lg:border-r border-white/10">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
-              {/* Part 01: Identification */}
-              <section className="grid md:grid-cols-2 gap-10">
-                <div className="space-y-2 group">
-                  <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest group-focus-within:text-amber-500 transition-colors">
-                    Client_Name
-                  </label>
-                  <input
-                    {...register("name")}
-                    className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all placeholder:text-gray-800"
-                    placeholder="ENTRY_REQUIRED"
-                  />
+              {/* Identity Section */}
+              <section>
+                <div className="flex items-center gap-3 mb-8">
+                  <span className="text-amber-500 font-mono text-xs">01</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    Entity_Identification
+                  </h3>
                 </div>
-                <div className="space-y-2 group">
-                  <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest group-focus-within:text-amber-500 transition-colors">
-                    Comm_Endpoint
-                  </label>
-                  <input
-                    {...register("email")}
-                    className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all placeholder:text-gray-800"
-                    placeholder="USER@DOMAIN.COM"
-                  />
-                </div>
-              </section>
-
-              {/* Part 02: Specs */}
-              <section className="space-y-10">
                 <div className="grid md:grid-cols-2 gap-10">
                   <div className="space-y-2">
                     <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest">
-                      Classification
+                      Client_Name
                     </label>
-                    <select
-                      {...register("projectType")}
-                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none appearance-none cursor-pointer"
-                    >
-                      {projectTypes.map((t) => (
-                        <option key={t} value={t} className="bg-[#030712]">
-                          {t}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      {...register("name")}
+                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all placeholder:text-gray-800"
+                      placeholder="ENTRY_REQUIRED"
+                    />
+                    {errors.name && (
+                      <span className="text-[9px] text-red-500 font-mono">
+                        {errors.name.message}
+                      </span>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest">
-                      Phone_Frequency
+                      Comm_Endpoint
                     </label>
                     <input
-                      {...register("phone")}
-                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none"
-                      placeholder="+251..."
+                      {...register("email")}
+                      className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none transition-all placeholder:text-gray-800"
+                      placeholder="USER@DOMAIN.COM"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest">
-                    Technical_Brief
-                  </label>
+              </section>
+
+              {/* Specs Section */}
+              <section>
+                <div className="flex items-center gap-3 mb-8">
+                  <span className="text-amber-500 font-mono text-xs">02</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    Project_Parameters
+                  </h3>
+                </div>
+                <div className="space-y-10">
+                  <div className="grid md:grid-cols-2 gap-10">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest">
+                        Classification
+                      </label>
+                      <select
+                        {...register("projectType")}
+                        className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none appearance-none"
+                      >
+                        <option
+                          value="CNC Manufacturing"
+                          className="bg-[#030712]"
+                        >
+                          CNC Manufacturing
+                        </option>
+                        <option
+                          value="Custom Furniture"
+                          className="bg-[#030712]"
+                        >
+                          Custom Furniture
+                        </option>
+                        <option value="Other" className="bg-[#030712]">
+                          Other
+                        </option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-bold uppercase text-gray-500 tracking-widest">
+                        Phone_Frequency
+                      </label>
+                      <input
+                        {...register("phone")}
+                        className="w-full bg-transparent border-b border-white/10 py-3 focus:border-amber-500 outline-none"
+                        placeholder="+251..."
+                      />
+                    </div>
+                  </div>
                   <textarea
                     {...register("description")}
                     rows={3}
@@ -246,40 +256,25 @@ export default function ContactPage() {
                 </div>
               </section>
 
-              {/* Part 03: EdgeStore Cloud Attachments */}
+              {/* Attachments Section */}
               <section>
                 <div className="flex items-center gap-3 mb-8">
                   <span className="text-amber-500 font-mono text-xs">03</span>
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-                    Technical_Attachments (Cloud_Storage)
+                    Technical_Attachments
                   </h3>
                 </div>
-                <div
-                  className={`relative border border-dashed p-12 transition-all text-center group ${
-                    isUploading
-                      ? "border-amber-500/50 bg-amber-500/5"
-                      : "border-white/10 hover:border-amber-500/40"
-                  }`}
-                >
+                <div className="relative border border-dashed border-white/10 p-12 hover:border-amber-500/40 transition-all text-center group">
                   <input
                     type="file"
                     multiple
                     accept="image/*,.pdf"
                     onChange={handleFileChange}
-                    disabled={isUploading}
-                    className="absolute inset-0 opacity-0 cursor-pointer z-20 disabled:cursor-wait"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-20"
                   />
-
-                  {isUploading ? (
-                    <FiLoader className="h-10 w-10 text-amber-500 mx-auto mb-4 animate-spin" />
-                  ) : (
-                    <FiUpload className="h-10 w-10 text-amber-500/40 mx-auto mb-4 group-hover:text-amber-500 group-hover:-translate-y-1 transition-all" />
-                  )}
-
+                  <FiUpload className="h-10 w-10 text-amber-500/40 mx-auto mb-4 group-hover:text-amber-500 transition-all" />
                   <p className="text-[10px] font-black uppercase tracking-widest">
-                    {isUploading
-                      ? "Uploading_to_Cloud..."
-                      : "Inject CAD_Sketches or Photos"}
+                    Uplink CAD_Sketches or Photos
                   </p>
                 </div>
 
@@ -288,13 +283,13 @@ export default function ContactPage() {
                     {previews.map((item, idx) => (
                       <div
                         key={idx}
-                        className="relative aspect-square border border-white/10 group bg-white/5 overflow-hidden"
+                        className="relative aspect-square border border-white/10 group bg-white/5"
                       >
                         {item.type === "image" ? (
                           <img
                             src={item.url}
-                            alt="cloud_file"
-                            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                            alt="prev"
+                            className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -304,7 +299,7 @@ export default function ContactPage() {
                         <button
                           type="button"
                           onClick={() => removeFile(idx)}
-                          className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -top-2 -right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <FiX size={10} />
                         </button>
@@ -314,23 +309,16 @@ export default function ContactPage() {
                 )}
               </section>
 
-              {error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] uppercase">
-                  {error}
-                </div>
-              )}
-
               <button
                 type="submit"
-                disabled={isSubmitting || isUploading}
+                disabled={isSubmitting}
                 className="w-full py-6 bg-amber-600 text-[#030712] font-black uppercase text-[12px] tracking-[0.5em] hover:bg-amber-500 transition-all flex items-center justify-center gap-4 group disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <FiLoader className="animate-spin" />
                 ) : (
                   <>
-                    {" "}
-                    <FiSend /> INITIATE_TRANSFER{" "}
+                    <FiSend /> INITIATE_TRANSFER
                   </>
                 )}
               </button>
@@ -339,23 +327,15 @@ export default function ContactPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-4 bg-white/[0.01] p-10 space-y-12">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 mb-8 flex items-center gap-2">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 flex items-center gap-2">
               <FiCpu /> Logic_Support
             </h4>
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/5 border border-white/10 text-amber-500">
-                  <FiPhone />
-                </div>
-                <div className="text-[11px] text-gray-400">+251 911 123456</div>
+              <div className="flex items-center gap-4 text-gray-400 font-mono text-[11px]">
+                <FiPhone className="text-amber-500" /> +251 911 123456
               </div>
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/5 border border-white/10 text-amber-500">
-                  <FiMail />
-                </div>
-                <div className="text-[11px] text-gray-400 uppercase">
-                  log@cnc_core.io
-                </div>
+              <div className="flex items-center gap-4 text-gray-400 font-mono text-[11px] uppercase">
+                <FiMail className="text-amber-500" /> log@cnc_core.io
               </div>
             </div>
           </div>

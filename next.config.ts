@@ -4,10 +4,9 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "files.edgestore.dev", // Replace with your actual image provider domain
       },
     ],
-    domains: ["localhost"],
   },
   // Increase body size limit for file uploads
   api: {
