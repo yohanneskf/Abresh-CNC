@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiMail,
@@ -52,6 +52,15 @@ export default function ContactList({
   const [isZoomed, setIsZoomed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Close Zoom on Escape Key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsZoomed(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
   const handleDownload = async (url: string) => {
     try {
       const response = await fetch(url);
@@ -64,7 +73,7 @@ export default function ContactList({
       link.click();
       document.body.removeChild(link);
     } catch (e) {
-      window.open(url, "_blank"); // Fallback
+      window.open(url, "_blank");
     }
   };
 
@@ -243,7 +252,6 @@ export default function ContactList({
               {/* CONTENT */}
               <div className="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                  {/* Left: Metadata */}
                   <div className="lg:col-span-7 space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5 border border-white/5">
                       {[
@@ -287,16 +295,8 @@ export default function ContactList({
                         "{selectedSubmission.description}"
                       </p>
                     </div>
-
-                    <button
-                      onClick={() => setSelectedSubmission(null)}
-                      className="hidden md:block px-8 py-3 border border-white/10 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:text-white hover:bg-white/5 transition-all"
-                    >
-                      Terminate_Session
-                    </button>
                   </div>
 
-                  {/* Right: Image Viewer */}
                   <div className="lg:col-span-5 space-y-4">
                     <h4 className="text-[8px] font-black text-amber-500 uppercase tracking-widest">
                       Visual_Data_Packet
@@ -304,36 +304,28 @@ export default function ContactList({
                     {selectedSubmission.images &&
                     selectedSubmission.images.length > 0 ? (
                       <div className="space-y-4">
-                        <div className="relative group border border-white/10 p-1 bg-black aspect-square overflow-hidden rounded-sm">
+                        <div
+                          className="relative group border border-white/10 p-1 bg-black aspect-square overflow-hidden rounded-sm cursor-zoom-in"
+                          onClick={() => setIsZoomed(true)}
+                        >
                           <img
                             src={selectedSubmission.images[currentImgIndex]}
-                            className="w-full h-full object-contain grayscale hover:grayscale-0 transition-all duration-700"
+                            className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-700"
                           />
-                          {/* OVERLAY CONTROLS */}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                            <button
-                              onClick={() => setIsZoomed(true)}
-                              className="p-4 bg-amber-500 text-black rounded-full hover:scale-110 transition-transform shadow-xl"
-                              title="Zoom Image"
-                            >
-                              <FiMaximize2 size={24} />
-                            </button>
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <FiMaximize2 className="text-amber-500 text-3xl" />
                           </div>
                         </div>
-
-                        {/* DOWNLOAD ACTION */}
-                        <div className="grid grid-cols-1 gap-2">
-                          <button
-                            onClick={() =>
-                              handleDownload(
-                                selectedSubmission.images![currentImgIndex]
-                              )
-                            }
-                            className="w-full py-4 bg-amber-600 hover:bg-amber-500 text-black text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-lg"
-                          >
-                            <FiDownload size={16} /> Download_Full_Schematic
-                          </button>
-                        </div>
+                        <button
+                          onClick={() =>
+                            handleDownload(
+                              selectedSubmission.images![currentImgIndex]
+                            )
+                          }
+                          className="w-full py-4 bg-amber-600 hover:bg-amber-500 text-black text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-lg"
+                        >
+                          <FiDownload size={16} /> Download_Full_Schematic
+                        </button>
                       </div>
                     ) : (
                       <div className="aspect-square border border-dashed border-white/5 flex flex-col items-center justify-center text-gray-700 italic text-[10px]">
@@ -357,32 +349,55 @@ export default function ContactList({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4"
+            onClick={() => setIsZoomed(false)} // BACKDROP CLICK TO CANCEL
           >
-            {/* FLOATING CLOSE BUTTON */}
+            {/* FLOATING CLOSE BUTTON (EXPLICIT CANCEL) */}
             <button
-              onClick={() => setIsZoomed(false)}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevents double-triggering backdrop click
+                setIsZoomed(false);
+              }}
               className="absolute top-6 right-6 bg-white/10 hover:bg-red-600 p-4 text-white z-[210] flex items-center gap-3 text-[12px] uppercase font-black transition-all border border-white/10 shadow-2xl"
             >
               <FiX size={24} /> Close_Viewer
             </button>
 
-            {/* IMAGE */}
-            <motion.img
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              src={selectedSubmission.images[currentImgIndex]}
-              className="max-w-full max-h-[80vh] object-contain shadow-[0_0_100px_rgba(251,191,36,0.1)]"
-            />
-
-            {/* MOBILE DOWNLOAD IN ZOOM */}
-            <button
-              onClick={() =>
-                handleDownload(selectedSubmission.images![currentImgIndex])
-              }
-              className="mt-8 px-10 py-4 bg-amber-500 text-black font-black uppercase tracking-widest text-xs flex items-center gap-3"
+            {/* IMAGE CONTAINER */}
+            <div
+              className="relative max-w-full max-h-[80vh]"
+              onClick={(e) => e.stopPropagation()}
             >
-              <FiDownload /> Download_Image
-            </button>
+              <motion.img
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                src={selectedSubmission.images[currentImgIndex]}
+                className="w-full h-full object-contain shadow-[0_0_100px_rgba(251,191,36,0.1)]"
+              />
+            </div>
+
+            <div className="flex gap-4 mt-8">
+              {/* DOWNLOAD WITHIN ZOOM */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownload(selectedSubmission.images![currentImgIndex]);
+                }}
+                className="px-8 py-4 bg-amber-500 text-black font-black uppercase tracking-widest text-xs flex items-center gap-3 hover:bg-white transition-colors"
+              >
+                <FiDownload /> Download_Packet
+              </button>
+
+              {/* MOBILE CANCEL BUTTON AT BOTTOM */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsZoomed(false);
+                }}
+                className="px-8 py-4 bg-white/5 text-white font-black uppercase tracking-widest text-xs border border-white/10 hover:bg-white/10"
+              >
+                Exit_Zoom
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -402,7 +417,7 @@ export default function ContactList({
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#080a0f] border border-red-500/30 p-8 text-center"
+              className="relative w-full max-w-md bg-[#080a0f] border border-red-500/30 p-8 text-center shadow-[0_0_50px_rgba(239,68,68,0.1)]"
             >
               <FiAlertTriangle className="text-red-500 text-4xl mx-auto mb-4 animate-pulse" />
               <h3 className="text-white font-black uppercase tracking-widest mb-2 text-sm">
