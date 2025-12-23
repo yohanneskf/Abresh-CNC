@@ -16,6 +16,9 @@ import {
   FiDownload,
   FiAlertTriangle,
   FiLoader,
+  FiChevronLeft,
+  FiChevronRight,
+  FiMaximize2,
 } from "react-icons/fi";
 
 interface Submission {
@@ -51,6 +54,26 @@ export default function ContactList({
   const [isZoomed, setIsZoomed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // --- PROTOCOL: DOWNLOAD PACKET ---
+  const handleDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `SCHEMATIC_${selectedSubmission?.name.replace(
+        /\s+/g,
+        "_"
+      )}_${currentImageIndex + 1}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error("Download failed", e);
+    }
+  };
+
   const executePurge = async () => {
     if (!submissionToPurge || !onDelete) return;
     setIsProcessing(true);
@@ -85,7 +108,7 @@ export default function ContactList({
         </div>
       </div>
 
-      {/* --- DESKTOP TABLE VIEW (Hidden on Mobile) --- */}
+      {/* --- DESKTOP TABLE VIEW --- */}
       <div className="hidden md:block bg-[#05070a] border border-white/5 overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-white/[0.02] border-b border-white/5">
@@ -143,7 +166,7 @@ export default function ContactList({
         </table>
       </div>
 
-      {/* --- MOBILE CARD VIEW (Visible only on Mobile) --- */}
+      {/* --- MOBILE CARD VIEW --- */}
       <div className="md:hidden space-y-4">
         {submissions.map((sub) => (
           <div
@@ -163,7 +186,6 @@ export default function ContactList({
                 {sub.projectType}
               </span>
             </div>
-
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
               <button
                 onClick={() => {
@@ -172,7 +194,7 @@ export default function ContactList({
                 }}
                 className="flex items-center justify-center gap-2 py-3 border border-white/10 text-[9px] font-black uppercase text-amber-500"
               >
-                <FiEye /> View_Data
+                <FiEye /> View
               </button>
               <button
                 onClick={() => setSubmissionToPurge(sub)}
@@ -185,9 +207,58 @@ export default function ContactList({
         ))}
       </div>
 
-      {/* --- MODALS (PURGE & DETAIL) --- */}
-      {/* (Keep your existing AnimatePresence modals here, I have optimized the detail modal below for mobile) */}
+      {/* --- PURGE CONFIRMATION MODAL --- */}
+      <AnimatePresence>
+        {submissionToPurge && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isProcessing && setSubmissionToPurge(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#080a0f] border border-red-500/30 p-8 text-center shadow-2xl"
+            >
+              <FiAlertTriangle className="text-red-500 text-4xl mx-auto mb-4 animate-pulse" />
+              <h2 className="text-white font-black uppercase tracking-widest mb-2">
+                Confirm_Data_Scrub
+              </h2>
+              <p className="text-gray-500 text-[10px] uppercase mb-8">
+                Permanent Erasure of: {submissionToPurge.name}
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setSubmissionToPurge(null)}
+                  disabled={isProcessing}
+                  className="flex-1 py-3 border border-white/10 text-gray-500 text-[10px] font-black uppercase hover:bg-white/5"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executePurge}
+                  disabled={isProcessing}
+                  className="flex-1 py-3 bg-red-600 text-white text-[10px] font-black uppercase flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? (
+                    <FiLoader className="animate-spin" />
+                  ) : (
+                    <>
+                      <FiTrash2 /> Purge_Now
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
+      {/* --- DETAIL VIEW MODAL --- */}
       <AnimatePresence>
         {selectedSubmission && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4">
@@ -199,90 +270,221 @@ export default function ContactList({
               className="absolute inset-0 bg-[#030712]/98 backdrop-blur-md"
             />
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="relative w-full max-w-6xl bg-[#080a0f] border border-amber-500/20 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="relative w-full max-w-6xl bg-[#080a0f] border border-amber-500/20 flex flex-col max-h-[90vh] overflow-hidden"
             >
-              {/* Modal Header */}
+              {/* Header */}
               <div className="flex justify-between items-center p-4 md:p-6 border-b border-white/5 bg-amber-500/[0.02]">
                 <div className="flex items-center gap-3">
-                  <FiCpu className="text-amber-500 shrink-0" />
-                  <h3 className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.2em] truncate">
-                    Diag_View //{" "}
-                    <span className="text-amber-500">
-                      ID_{selectedSubmission.id.slice(-5)}
-                    </span>
-                  </h3>
+                  <FiCpu className="text-amber-500" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                    Inquiry_File // {selectedSubmission.id.slice(-5)}
+                  </span>
                 </div>
                 <button
                   onClick={() => setSelectedSubmission(null)}
-                  className="text-gray-500 hover:text-white p-2"
+                  className="text-gray-500 hover:text-white"
                 >
                   <FiX size={20} />
                 </button>
               </div>
 
-              {/* Modal Content - Scrollable */}
-              <div className="p-4 md:p-8 overflow-y-auto space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
-                  {/* Info */}
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* Info Panel */}
                   <div className="lg:col-span-7 space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/5 border border-white/5">
                       {[
-                        { label: "Client", val: selectedSubmission.name },
-                        { label: "Email", val: selectedSubmission.email },
                         {
-                          label: "Phone",
-                          val: selectedSubmission.phone || "N/A",
+                          label: "Client_Name",
+                          val: selectedSubmission.name,
+                          icon: <FiUsers />,
                         },
-                        { label: "Type", val: selectedSubmission.projectType },
+                        {
+                          label: "Contact_Email",
+                          val: selectedSubmission.email,
+                          icon: <FiMail />,
+                        },
+                        {
+                          label: "Access_Phone",
+                          val: selectedSubmission.phone || "N/A",
+                          icon: <FiPhone />,
+                        },
+                        {
+                          label: "Project_Class",
+                          val: selectedSubmission.projectType,
+                          icon: <FiActivity />,
+                        },
                       ].map((item, i) => (
-                        <div key={i} className="bg-[#080a0f] p-3 md:p-4">
-                          <span className="text-[7px] md:text-[8px] text-gray-600 block uppercase mb-1">
-                            {item.label}
-                          </span>
-                          <span className="text-xs font-bold text-white break-all">
-                            {item.val}
-                          </span>
+                        <div
+                          key={i}
+                          className="bg-[#080a0f] p-4 flex gap-4 items-center"
+                        >
+                          <div className="text-amber-500/30">{item.icon}</div>
+                          <div>
+                            <span className="text-[7px] text-gray-600 block uppercase tracking-tighter">
+                              {item.label}
+                            </span>
+                            <span className="text-xs font-bold text-white uppercase">
+                              {item.val}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
-
-                    <div className="bg-amber-500/[0.03] border border-amber-500/10 p-4 md:p-6">
-                      <h4 className="text-[8px] font-black text-amber-500 uppercase tracking-widest mb-2">
-                        Technical_Brief
+                    <div className="bg-amber-500/[0.03] border border-amber-500/10 p-6">
+                      <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-4">
+                        Transmission_Content
                       </h4>
-                      <p className="text-xs md:text-sm text-gray-300 leading-relaxed italic">
+                      <p className="text-sm text-gray-300 leading-relaxed italic">
                         "{selectedSubmission.description}"
                       </p>
                     </div>
                   </div>
 
-                  {/* Images */}
-                  <div className="lg:col-span-5">
-                    {selectedSubmission.images?.length ? (
+                  {/* Image Gallery Panel */}
+                  <div className="lg:col-span-5 space-y-4">
+                    <h4 className="text-[9px] font-black text-amber-500 uppercase tracking-widest">
+                      Visual_Payload
+                    </h4>
+                    {selectedSubmission.images &&
+                    selectedSubmission.images.length > 0 ? (
                       <div className="space-y-4">
-                        <div className="relative border border-white/10 p-1 bg-black aspect-square">
+                        <div className="relative group aspect-square bg-black border border-white/10 overflow-hidden">
                           <img
-                            src={selectedSubmission.images[0]}
-                            className="w-full h-full object-contain grayscale"
+                            src={selectedSubmission.images[currentImageIndex]}
+                            className="w-full h-full object-contain transition-all duration-700"
+                            alt="Schematic"
                           />
+
+                          {/* Hover Controls */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                            <button
+                              onClick={() => setIsZoomed(true)}
+                              className="p-3 bg-white text-black hover:bg-amber-500 transition-colors"
+                            >
+                              <FiMaximize2 />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleDownload(
+                                  selectedSubmission.images![currentImageIndex]
+                                )
+                              }
+                              className="p-3 bg-white text-black hover:bg-amber-500 transition-colors"
+                            >
+                              <FiDownload />
+                            </button>
+                          </div>
+
+                          {/* Navigation */}
+                          {selectedSubmission.images.length > 1 && (
+                            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-2 flex justify-between pointer-events-none">
+                              <button
+                                onClick={() =>
+                                  setCurrentImageIndex((prev) =>
+                                    prev > 0
+                                      ? prev - 1
+                                      : selectedSubmission.images!.length - 1
+                                  )
+                                }
+                                className="p-2 bg-black/80 text-white pointer-events-auto hover:text-amber-500"
+                              >
+                                <FiChevronLeft />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setCurrentImageIndex((prev) =>
+                                    prev < selectedSubmission.images!.length - 1
+                                      ? prev + 1
+                                      : 0
+                                  )
+                                }
+                                className="p-2 bg-black/80 text-white pointer-events-auto hover:text-amber-500"
+                              >
+                                <FiChevronRight />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                          {selectedSubmission.images.map((img, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setCurrentImageIndex(i)}
+                              className={`w-16 h-16 shrink-0 border-2 transition-all ${
+                                currentImageIndex === i
+                                  ? "border-amber-500"
+                                  : "border-white/5 opacity-40"
+                              }`}
+                            >
+                              <img
+                                src={img}
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          ))}
                         </div>
                       </div>
                     ) : (
-                      <div className="aspect-square border border-dashed border-white/5 flex flex-col items-center justify-center text-gray-800 italic text-[10px]">
-                        NO_VISUAL_DATA
+                      <div className="aspect-square border border-dashed border-white/5 flex flex-col items-center justify-center text-gray-700 italic text-[10px]">
+                        NO_VISUAL_DATA_ATTACHED
                       </div>
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="p-4 bg-white/[0.02] border-t border-white/5 flex justify-end gap-3">
+                <button
+                  onClick={() => setSelectedSubmission(null)}
+                  className="px-6 py-2 border border-white/10 text-gray-500 text-[10px] font-black uppercase hover:text-white"
+                >
+                  Close_File
+                </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ... (Keep Purge Modal logic same as before) ... */}
+      {/* --- FULL SCREEN ZOOM VIEWER --- */}
+      <AnimatePresence>
+        {isZoomed && selectedSubmission?.images && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/98 flex items-center justify-center p-4"
+          >
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-8 right-8 text-white/50 hover:text-white z-[210]"
+            >
+              <FiX size={40} />
+            </button>
+            <motion.img
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              src={selectedSubmission.images[currentImageIndex]}
+              className="max-w-full max-h-full object-contain shadow-2xl"
+            />
+            <div className="absolute bottom-10 flex gap-4">
+              <button
+                onClick={() =>
+                  handleDownload(selectedSubmission.images![currentImageIndex])
+                }
+                className="flex items-center gap-2 px-6 py-3 bg-white text-black font-black uppercase text-xs hover:bg-amber-500 transition-colors"
+              >
+                <FiDownload /> Download_High_Res
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
